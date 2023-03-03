@@ -1,4 +1,4 @@
-package org.miniProject1;
+package MiniProject1;
 
 import java.io.FileWriter;
 import java.io.IOException;

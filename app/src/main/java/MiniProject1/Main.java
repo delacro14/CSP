@@ -1,6 +1,9 @@
 package MiniProject1;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.io.FileWriter;
+import java.io.IOException;
 
 class Triple<T, U, V> {
 
@@ -31,14 +34,23 @@ public class Main {
         //DataGenerator data = new DataGenerator(650);
         int[] threads = {1, 2, 4, 8, 16, 32};
         int[] hashbits = {1, 2, 4, 8, 16, 32};
+        int numberOfRuns = 10;
         ArrayList<Triple> tupleList = new ArrayList<>();
-
-
+        IndependentPartition ip = new IndependentPartition();
+        ConcurrentPartition cp = new ConcurrentPartition();
         
-        for (int i = 0; i < threads.length; i++) { //for each number of threads
-            for (int j = 0; j < hashbits.length; j++) { //for each number of hashbits
-                //System.out.println("Creating hash table with " + threads[i] + " threads and " + hashbits[j] + " hashbits");
-                Triple tripl = new Triple(threads[i], hashbits[j], 3000000000L);
+        for (int i = 0; i < threads.length; i++) {
+            for (int j = 0; j < hashbits.length; j++) {
+                ArrayList<Long> results = new ArrayList<>();
+                for (int k = 0; k < numberOfRuns; k++) {
+                    results.add(ip.partition(threads[i], hashbits[j]));
+                }
+                //calculate the average
+                long average = 0;
+                for (int k = 0; k < results.size(); k++) {
+                    average += results.get(k);
+                }
+                Triple tripl = new Triple(threads[i], hashbits[j], average);
                 tupleList.add(tripl);
             }
         }
@@ -46,7 +58,19 @@ public class Main {
         for (int i = 0; i < tupleList.size(); i++) {
             System.out.println(tupleList.get(i));
         }
-        // Write data to file
-        //data.writeDataToFile();
+
+
+        //write to output
+        String fileName = "data.txt";
+        try (FileWriter writer = new FileWriter(fileName, false)) {
+            // for entry in TupleList
+            for (int i = 0; i < tupleList.size(); i++) {
+                writer.write(tupleList.get(i).toString());
+                writer.append('\n');
+            }
+            writer.flush();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 }

@@ -21,6 +21,14 @@ application {
     // This shows a deprecation for Gradle 8, but the new solution is not backwards compatible, e.g., Gradle 6.3
     mainClassName = project.hasProperty("mainClass") ? project.getProperty("mainClass") : "NULL"
 }
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'MiniProject1.Main'
+        )
+    }
+}
+
 
 run {
     enableAssertions=true

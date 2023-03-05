@@ -27,7 +27,7 @@ public class IndependentPartition {
     }
 
 
-    public long partition(int numberOfThreads, int hashBits) {
+    public long partition(int numberOfThreads, int hashBits, ArrayList<Integer> results) {
         //System.out.println("Partition of " + numberOfThreads + " threads and " + hashBits + " hash bits");
 
         ArrayList<Long> list = new ArrayList<>();
@@ -69,6 +69,11 @@ public class IndependentPartition {
         }
         //stop timer
         long endTime = System.currentTimeMillis();
+        int countBucket = 0;
+        for (int i = 0; i < buckets.size(); i++) {
+            countBucket = countBucket + buckets.get(i).size();
+        }
+        results.add(countBucket);
         //return time
         return endTime - startTime;
     }

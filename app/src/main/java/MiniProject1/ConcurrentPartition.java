@@ -12,27 +12,31 @@ public class ConcurrentPartition {
         // Find the maximum value in our particular piece of the array
         private int hashBits;
         private ArrayList<Long> bucket;
-        ArrayList<Long> buffer;
-        ReentrantLock lock;
+        ArrayList<ArrayList<Long>> buffer;
+        ReentrantLock[] locks;
+        private int threadNum;
 
         public WorkerThread(
                 ArrayList<Long> bucket,
                 int hashBits,
-                ArrayList<Long> buffer,
-                ReentrantLock lock) {
+                ArrayList<ArrayList<Long>> buffer,
+                ReentrantLock[] locks,
+                int threadNum) {
             this.bucket = bucket;
             this.hashBits = hashBits;
             this.buffer = buffer;
-            this.lock = lock;
+            this.locks = locks;
+            this.threadNum = threadNum;
         }
 
         public void run() {
             //partition the bucket
             for (int i = 0; i < bucket.size(); i++) {
+                int partition = Math.abs(Long.hashCode(this.threadNum)) % hashBits;
                 Long value = bucket.get(i);
-                lock.lock();
-                buffer.add(value);
-                lock.unlock();
+                locks[partition].lock();
+                buffer.get(partition).add(value);
+                locks[partition].unlock();
             }
         }
     }
@@ -40,7 +44,6 @@ public class ConcurrentPartition {
     public long partition(int numberOfThreads, int hashBits) {
 
         ArrayList<Long> list = new ArrayList<>();
-        AtomicInteger counter = new AtomicInteger(0);
 
         for (int i = 0; i < numberOfThreads*100000; i++) {
             list.add((long)(Math.random() * 10000000));
@@ -59,9 +62,15 @@ public class ConcurrentPartition {
         }
 
         Thread[] threads = new Thread[numberOfThreads];
-        ArrayList<Long> buffer = new ArrayList<>();
+        ArrayList<ArrayList<Long>> buffer = new ArrayList<>();
+        for (int i = 0; i < numberOfThreads; i++) {
+            buffer.add(new ArrayList<>());
+        }
+        ReentrantLock[] locks = new ReentrantLock[hashBits];
 
-        ReentrantLock lock = new ReentrantLock();
+        for (int i = 0; i < hashBits; i++) {
+            locks[i] = new ReentrantLock();
+        }
 
         //give threads work
         for (int i = 0; i < numberOfThreads; i++) {
@@ -69,7 +78,8 @@ public class ConcurrentPartition {
                     buckets.get(i),
                     hashBits,
                     buffer,
-                    lock);
+                    locks,
+                    i);
         }
 
         //start timer
@@ -90,14 +100,18 @@ public class ConcurrentPartition {
         //stop timer
         long endTime = System.currentTimeMillis();
         //return time
-        int count = 0;
+        int countBucket = 0;
+        int countBuffer = 0;
         for (int i = 0; i < buckets.size(); i++) {
-            count = count + buckets.get(i).size();
+            countBucket = countBucket + buckets.get(i).size();
+        }
+        for (int i = 0; i < buffer.size(); i++) {
+            countBuffer = countBuffer + buffer.get(i).size();
         }
         System.out.println("number of threads: " + numberOfThreads);
         System.out.println("hash bits: " + hashBits);
-        System.out.println("buckets size: " + count);
-        System.out.println("buffer size: " + buffer.size());
+        System.out.println("buckets size: " + countBucket);
+        System.out.println("buffer size: " + countBuffer);
         return endTime - startTime;
     }
 

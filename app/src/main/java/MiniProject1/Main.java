@@ -73,7 +73,7 @@ public class Main {
 
 
         //write to output
-        String fileNameIndependentPartition = "dataIndependentPartition.txt";
+        String fileNameIndependentPartition = "dataIndependentPartition.csv";
         try (FileWriter writer = new FileWriter(fileNameIndependentPartition, false)) {
             // for entry in TupleList
             for (int i = 0; i < tupleListIndependentPartition.size(); i++) {
@@ -84,7 +84,7 @@ public class Main {
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
-        String fileNameConcurrentPartition = "dataConcurrentPartition.txt";
+        String fileNameConcurrentPartition = "dataConcurrentPartition.csv";
         try (FileWriter writer = new FileWriter(fileNameConcurrentPartition, false)) {
             // for entry in TupleList
             for (int i = 0; i < tupleListConcurrentPartition.size(); i++) {

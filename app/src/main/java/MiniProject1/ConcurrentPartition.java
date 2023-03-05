@@ -32,8 +32,8 @@ public class ConcurrentPartition {
         public void run() {
             //partition the bucket
             for (int i = 0; i < bucket.size(); i++) {
-                int partition = Math.abs(Long.hashCode(this.threadNum)) % hashBits;
                 Long value = bucket.get(i);
+                int partition = (int) (value % hashBits);
                 locks[partition].lock();
                 buffer.get(partition).add(value);
                 locks[partition].unlock();
@@ -42,11 +42,12 @@ public class ConcurrentPartition {
     }
 
     public long partition(int numberOfThreads, int hashBits) {
-
+        System.out.println("number of threads: " + numberOfThreads);
+        System.out.println("hash bits: " + hashBits);
         ArrayList<Long> list = new ArrayList<>();
 
-        for (int i = 0; i < numberOfThreads*100000; i++) {
-            list.add((long)(Math.random() * 10000000));
+        for (int i = 0; i < numberOfThreads * 100000; i++) {
+            list.add((long) (Math.random() * 10000000));
         }
 
         ArrayList<ArrayList<Long>> buckets = new ArrayList<>();
@@ -63,7 +64,7 @@ public class ConcurrentPartition {
 
         Thread[] threads = new Thread[numberOfThreads];
         ArrayList<ArrayList<Long>> buffer = new ArrayList<>();
-        for (int i = 0; i < numberOfThreads; i++) {
+        for (int i = 0; i < hashBits; i++) {
             buffer.add(new ArrayList<>());
         }
         ReentrantLock[] locks = new ReentrantLock[hashBits];
@@ -107,9 +108,9 @@ public class ConcurrentPartition {
         }
         for (int i = 0; i < buffer.size(); i++) {
             countBuffer = countBuffer + buffer.get(i).size();
+            System.out.println("buffer[" + i + "]" + buffer.get(i).size());
         }
-        System.out.println("number of threads: " + numberOfThreads);
-        System.out.println("hash bits: " + hashBits);
+
         System.out.println("buckets size: " + countBucket);
         System.out.println("buffer size: " + countBuffer);
         return endTime - startTime;

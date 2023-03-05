@@ -28,7 +28,7 @@ public class IndependentPartition {
 
 
     public long partition(int numberOfThreads, int hashBits) {
-        System.out.println("Partition of " + numberOfThreads + " threads and " + hashBits + " hash bits");
+        //System.out.println("Partition of " + numberOfThreads + " threads and " + hashBits + " hash bits");
 
         ArrayList<Long> list = new ArrayList<>();
         for (int i = 0; i < numberOfThreads*100000; i++) {
@@ -47,8 +47,8 @@ public class IndependentPartition {
         Thread[] threads = new Thread[numberOfThreads];
         //give threads work
         for (int i = 0; i < numberOfThreads; i++) {
-            System.out.println(buckets.size());
-            System.out.println(i);
+            //System.out.println(buckets.size());
+            //System.out.println(i);
             threads[i] = new WorkerThread(buckets.get(i), hashBits);       
             };
             

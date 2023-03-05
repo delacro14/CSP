@@ -42,8 +42,8 @@ public class ConcurrentPartition {
     }
 
     public long partition(int numberOfThreads, int hashBits) {
-        System.out.println("number of threads: " + numberOfThreads);
-        System.out.println("hash bits: " + hashBits);
+        //System.out.println("number of threads: " + numberOfThreads);
+        //System.out.println("hash bits: " + hashBits);
         ArrayList<Long> list = new ArrayList<>();
 
         for (int i = 0; i < numberOfThreads * 100000; i++) {
@@ -108,11 +108,11 @@ public class ConcurrentPartition {
         }
         for (int i = 0; i < buffer.size(); i++) {
             countBuffer = countBuffer + buffer.get(i).size();
-            System.out.println("buffer[" + i + "]" + buffer.get(i).size());
+            //System.out.println("buffer[" + i + "]" + buffer.get(i).size());
         }
 
-        System.out.println("buckets size: " + countBucket);
-        System.out.println("buffer size: " + countBuffer);
+        //System.out.println("buckets size: " + countBucket);
+        //System.out.println("buffer size: " + countBuffer);
         return endTime - startTime;
     }
 

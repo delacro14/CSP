@@ -35,7 +35,8 @@ public class Main {
         int[] threads = {1, 2, 4, 8, 16, 32};
         int[] hashbits = {1, 2, 4, 8, 16, 32};
         int numberOfRuns = 10;
-        ArrayList<Triple> tupleList = new ArrayList<>();
+        ArrayList<Triple> tupleListIndependentPartition = new ArrayList<>();
+        ArrayList<Triple> tupleListConcurrentPartition = new ArrayList<>();
         IndependentPartition ip = new IndependentPartition();
         ConcurrentPartition cp = new ConcurrentPartition();
         
@@ -51,26 +52,49 @@ public class Main {
                     average += results.get(k);
                 }
                 Triple tripl = new Triple(threads[i], hashbits[j], average);
-                tupleList.add(tripl);
+                tupleListIndependentPartition.add(tripl);
             }
         }
-        //print out all tupleList member
-        for (int i = 0; i < tupleList.size(); i++) {
-            System.out.println(tupleList.get(i));
+        for (int i = 0; i < threads.length; i++) {
+            for (int j = 0; j < hashbits.length; j++) {
+                ArrayList<Long> results = new ArrayList<>();
+                for (int k = 0; k < numberOfRuns; k++) {
+                    results.add(cp.partition(threads[i], hashbits[j]));
+                }
+                //calculate the average
+                long average = 0;
+                for (int k = 0; k < results.size(); k++) {
+                    average += results.get(k);
+                }
+                Triple tripl = new Triple(threads[i], hashbits[j], average);
+                tupleListConcurrentPartition.add(tripl);
+            }
         }
 
 
         //write to output
-        String fileName = "data.txt";
-        try (FileWriter writer = new FileWriter(fileName, false)) {
+        String fileNameIndependentPartition = "dataIndependentPartition.txt";
+        try (FileWriter writer = new FileWriter(fileNameIndependentPartition, false)) {
             // for entry in TupleList
-            for (int i = 0; i < tupleList.size(); i++) {
-                writer.write(tupleList.get(i).toString());
+            for (int i = 0; i < tupleListIndependentPartition.size(); i++) {
+                writer.write(tupleListIndependentPartition.get(i).toString());
                 writer.append('\n');
             }
             writer.flush();
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
+        String fileNameConcurrentPartition = "dataConcurrentPartition.txt";
+        try (FileWriter writer = new FileWriter(fileNameConcurrentPartition, false)) {
+            // for entry in TupleList
+            for (int i = 0; i < tupleListConcurrentPartition.size(); i++) {
+                writer.write(tupleListConcurrentPartition.get(i).toString());
+                writer.append('\n');
+            }
+            writer.flush();
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+
     }
 }

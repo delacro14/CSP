@@ -1,32 +1,29 @@
 package MiniProject1;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ConcurrentPartition {
-    private static class WorkerThread extends Thread {
+    private static class WorkerThread implements Runnable {
         // Find the maximum value in our particular piece of the array
         private int hashBits;
         private ArrayList<Long> bucket;
         ArrayList<ArrayList<Long>> buffer;
         ReentrantLock[] locks;
-        private int threadNum;
 
         public WorkerThread(
                 ArrayList<Long> bucket,
                 int hashBits,
                 ArrayList<ArrayList<Long>> buffer,
-                ReentrantLock[] locks,
-                int threadNum) {
+                ReentrantLock[] locks) {
             this.bucket = bucket;
             this.hashBits = hashBits;
             this.buffer = buffer;
             this.locks = locks;
-            this.threadNum = threadNum;
         }
 
         public void run() {
@@ -42,8 +39,8 @@ public class ConcurrentPartition {
     }
 
     public long partition(int numberOfThreads, int hashBits) {
-        //System.out.println("number of threads: " + numberOfThreads);
-        //System.out.println("hash bits: " + hashBits);
+//        System.out.println("number of threads: " + numberOfThreads);
+//        System.out.println("hash bits: " + hashBits);
         ArrayList<Long> list = new ArrayList<>();
 
         for (int i = 0; i < numberOfThreads * 100000; i++) {
@@ -62,7 +59,6 @@ public class ConcurrentPartition {
             }
         }
 
-        Thread[] threads = new Thread[numberOfThreads];
         ArrayList<ArrayList<Long>> buffer = new ArrayList<>();
         for (int i = 0; i < hashBits; i++) {
             buffer.add(new ArrayList<>());
@@ -73,46 +69,45 @@ public class ConcurrentPartition {
             locks[i] = new ReentrantLock();
         }
 
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+//        CountDownLatch latch = new CountDownLatch(numberOfThreads);
         //give threads work
         for (int i = 0; i < numberOfThreads; i++) {
-            threads[i] = new ConcurrentPartition.WorkerThread(
+            executor.execute(new ConcurrentPartition.WorkerThread(
                     buckets.get(i),
                     hashBits,
                     buffer,
-                    locks,
-                    i);
+                    locks));
         }
 
         //start timer
         long startTime = System.currentTimeMillis();
 
         //start threads
-        for (int i = 0; i < numberOfThreads; i++) {
-            threads[i].start();
+        executor.shutdown();
+
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+//            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        //wait for threads to finish
-        for (int i = 0; i < numberOfThreads; i++) {
-            try {
-                threads[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+
         //stop timer
         long endTime = System.currentTimeMillis();
         //return time
-        int countBucket = 0;
-        int countBuffer = 0;
-        for (int i = 0; i < buckets.size(); i++) {
-            countBucket = countBucket + buckets.get(i).size();
-        }
-        for (int i = 0; i < buffer.size(); i++) {
-            countBuffer = countBuffer + buffer.get(i).size();
-            //System.out.println("buffer[" + i + "]" + buffer.get(i).size());
-        }
-
-        //System.out.println("buckets size: " + countBucket);
-        //System.out.println("buffer size: " + countBuffer);
+//        int countBucket = 0;
+//        int countBuffer = 0;
+//        for (int i = 0; i < buckets.size(); i++) {
+//            countBucket = countBucket + buckets.get(i).size();
+//        }
+//        for (int i = 0; i < buffer.size(); i++) {
+//            countBuffer = countBuffer + buffer.get(i).size();
+//            System.out.println("buffer[" + i + "]" + buffer.get(i).size());
+//        }
+//
+//        System.out.println("buckets size: " + countBucket);
+//        System.out.println("buffer size: " + countBuffer);
         return endTime - startTime;
     }
 

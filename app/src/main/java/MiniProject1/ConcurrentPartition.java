@@ -35,6 +35,7 @@ public class ConcurrentPartition {
     }
 
     public long partition(int numberOfThreads, int hashBits, ArrayList<Integer> results) {
+        System.out.println("Concurrent Partition" + " " + numberOfThreads + " " + hashBits);
         long numberOfTuples = 3200000;
 
         ArrayList<Long> list = new ArrayList<>();
@@ -66,7 +67,6 @@ public class ConcurrentPartition {
         }
 
         //start timer
-        long startTime = System.currentTimeMillis();
 
         Thread[] threads = new Thread[numberOfThreads];
         //give threads work
@@ -78,6 +78,8 @@ public class ConcurrentPartition {
                 locks
             );
         };
+        
+        long startTime = System.currentTimeMillis();
 
         //start threads
         for (int i = 0; i < numberOfThreads; i++) {

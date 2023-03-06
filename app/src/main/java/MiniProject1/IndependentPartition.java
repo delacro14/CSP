@@ -28,6 +28,7 @@ public class IndependentPartition {
 
 
     public long partition(int numberOfThreads, int hashBits, ArrayList<Integer> results) {
+        System.out.println("Independent Partition" + " " + numberOfThreads + " " + hashBits);
         long numberOfTuples = 3200000;
 
         ArrayList<Long> list = new ArrayList<>();
@@ -48,13 +49,13 @@ public class IndependentPartition {
             }
         }
 
-        long startTime = System.currentTimeMillis();
-
         Thread[] threads = new Thread[numberOfThreads];
         for (int i = 0; i < numberOfThreads; i++) {
             threads[i] = new WorkerThread(buckets.get(i), hashBits);       
         };
 
+        long startTime = System.currentTimeMillis();
+        
         //start threads
         for (int i = 0; i < numberOfThreads; i++) {
             threads[i].start();

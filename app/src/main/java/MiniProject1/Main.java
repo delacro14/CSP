@@ -1,9 +1,9 @@
 package MiniProject1;
 
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.Math;
 
 class Triple<T, U, V, K> {
 
@@ -36,7 +36,7 @@ public class Main {
         // Create data
         //DataGenerator data = new DataGenerator(650);
         int[] threads = {1, 2, 4, 8, 16, 32};
-        int[] hashbits = {1, 2, 4, 8, 16, 32};
+        int[] hashbits = {1, 2, 4, 8, 16};
         int numberOfRuns = 10;
         ArrayList<Triple> tupleListIndependentPartition = new ArrayList<>();
         ArrayList<Triple> tupleListConcurrentPartition = new ArrayList<>();
@@ -48,7 +48,7 @@ public class Main {
                 ArrayList<Long> results = new ArrayList<>();
                 ArrayList<Integer> results2 = new ArrayList<>();
                 for (int k = 0; k < numberOfRuns; k++) {
-                    results.add(ip.partition(threads[i], hashbits[j], results2));
+                    results.add(ip.partition(threads[i], (int) (Math.pow(2, hashbits[j])), results2));
                 }
                 //calculate the average
                 long average = 0;
@@ -66,7 +66,7 @@ public class Main {
                 ArrayList<Long> results = new ArrayList<>();
                 ArrayList<Integer> results2 = new ArrayList<>();
                 for (int k = 0; k < numberOfRuns; k++) {
-                    results.add(cp.partition(threads[i], hashbits[j], results2));
+                    results.add(cp.partition(threads[i], 2 ^ hashbits[j], results2));
                 }
                 //calculate the average
                 long average = 0;

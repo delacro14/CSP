@@ -1,15 +1,11 @@
 package MiniProject1;
 
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ConcurrentPartition {
-    private static class WorkerThread implements Runnable {
-        // Find the maximum value in our particular piece of the array
+    private static class WorkerThread extends Thread {
         private int hashBits;
         private ArrayList<Long> bucket;
         ArrayList<ArrayList<Long>> buffer;
@@ -39,11 +35,11 @@ public class ConcurrentPartition {
     }
 
     public long partition(int numberOfThreads, int hashBits, ArrayList<Integer> results) {
-//        System.out.println("number of threads: " + numberOfThreads);
-//        System.out.println("hash bits: " + hashBits);
+        long numberOfTuples = 3200000;
+
         ArrayList<Long> list = new ArrayList<>();
 
-        for (int i = 0; i < numberOfThreads * 100000; i++) {
+        for (int i = 0; i < numberOfTuples; i++) {
             list.add((long) (Math.random() * 10000000));
         }
 
@@ -54,7 +50,7 @@ public class ConcurrentPartition {
         }
 
         for (int i = 0; i < numberOfThreads; i++) {
-            for (int j = i; j < 100000; j++) {
+            for (int j = i; j < (i+1) * (numberOfTuples / numberOfThreads); j++) {
                 buckets.get(i).add(list.get(j));
             }
         }
@@ -69,46 +65,36 @@ public class ConcurrentPartition {
             locks[i] = new ReentrantLock();
         }
 
-        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
-//        CountDownLatch latch = new CountDownLatch(numberOfThreads);
-        //give threads work
-        for (int i = 0; i < numberOfThreads; i++) {
-            executor.execute(new ConcurrentPartition.WorkerThread(
-                    buckets.get(i),
-                    hashBits,
-                    buffer,
-                    locks));
-        }
-
         //start timer
         long startTime = System.currentTimeMillis();
 
+        Thread[] threads = new Thread[numberOfThreads];
+        //give threads work
+        for (int i = 0; i < numberOfThreads; i++) {
+            threads[i] = new WorkerThread(
+                buckets.get(i),
+                hashBits,
+                buffer,
+                locks
+            );
+        };
+
         //start threads
-        executor.shutdown();
-
-        try {
-            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-//            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (int i = 0; i < numberOfThreads; i++) {
+            threads[i].start();
         }
-
+        //wait for threads to finish
+        for (int i = 0; i < numberOfThreads; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         //stop timer
         long endTime = System.currentTimeMillis();
+        results.add((int) (numberOfTuples));
         //return time
-        int countBucket = 0;
-//        int countBuffer = 0;
-        for (int i = 0; i < buckets.size(); i++) {
-            countBucket = countBucket + buckets.get(i).size();
-        }
-        results.add(countBucket);
-//        for (int i = 0; i < buffer.size(); i++) {
-//            countBuffer = countBuffer + buffer.get(i).size();
-//            System.out.println("buffer[" + i + "]" + buffer.get(i).size());
-//        }
-//
-//        System.out.println("buckets size: " + countBucket);
-//        System.out.println("buffer size: " + countBuffer);
         return endTime - startTime;
     }
 

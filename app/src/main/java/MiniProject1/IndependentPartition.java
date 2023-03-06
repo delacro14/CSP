@@ -28,32 +28,32 @@ public class IndependentPartition {
 
 
     public long partition(int numberOfThreads, int hashBits, ArrayList<Integer> results) {
-        //System.out.println("Partition of " + numberOfThreads + " threads and " + hashBits + " hash bits");
+        long numberOfTuples = 3200000;
 
         ArrayList<Long> list = new ArrayList<>();
-        for (int i = 0; i < numberOfThreads*100000; i++) {
-            list.add((long)(Math.random() * 10000000));
+
+        for (int i = 0; i < numberOfTuples; i++) {
+            list.add((long) (Math.random() * 10000000));
         }
+
         ArrayList<ArrayList<Long>> buckets = new ArrayList<>();
+
         for (int i = 0; i < numberOfThreads; i++) {
             buckets.add(new ArrayList<>());
         }
+
         for (int i = 0; i < numberOfThreads; i++) {
-            for (int j = i; j < 100000; j++) {
+            for (int j = i; j < (i+1) * (numberOfTuples / numberOfThreads); j++) {
                 buckets.get(i).add(list.get(j));
             }
         }
 
-        Thread[] threads = new Thread[numberOfThreads];
-        //give threads work
-        for (int i = 0; i < numberOfThreads; i++) {
-            //System.out.println(buckets.size());
-            //System.out.println(i);
-            threads[i] = new WorkerThread(buckets.get(i), hashBits);       
-            };
-            
-        //start timer
         long startTime = System.currentTimeMillis();
+
+        Thread[] threads = new Thread[numberOfThreads];
+        for (int i = 0; i < numberOfThreads; i++) {
+            threads[i] = new WorkerThread(buckets.get(i), hashBits);       
+        };
 
         //start threads
         for (int i = 0; i < numberOfThreads; i++) {
@@ -69,11 +69,7 @@ public class IndependentPartition {
         }
         //stop timer
         long endTime = System.currentTimeMillis();
-        int countBucket = 0;
-        for (int i = 0; i < buckets.size(); i++) {
-            countBucket = countBucket + buckets.get(i).size();
-        }
-        results.add(countBucket);
+        results.add((int) (numberOfTuples));
         //return time
         return endTime - startTime;
     }

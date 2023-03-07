@@ -66,7 +66,7 @@ public class Main {
                 ArrayList<Long> results = new ArrayList<>();
                 ArrayList<Integer> results2 = new ArrayList<>();
                 for (int k = 0; k < numberOfRuns; k++) {
-                    results.add(cp.partition(threads[i], 2 ^ hashbits[j], results2));
+                    results.add(cp.partition(threads[i], (int) (Math.pow(2, hashbits[j])), results2));
                 }
                 //calculate the average
                 long average = 0;

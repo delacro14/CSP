@@ -1,6 +1,10 @@
 package MiniProject1;
 
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class IndependentPartition {
     private static class WorkerThread extends Thread {
@@ -27,52 +31,76 @@ public class IndependentPartition {
     }
 
 
-    public long partition(int numberOfThreads, int hashBits, ArrayList<Integer> results) {
+    public long partition(int numberOfThreads, int hashBits) {
         System.out.println("Independent Partition" + " " + numberOfThreads + " " + hashBits);
-        long numberOfTuples = 3200000;
+        long numberOfTuples = 16777216;
 
-        ArrayList<Long> list = new ArrayList<>();
+        Long[] list = new Long[(int) numberOfTuples];
 
         for (int i = 0; i < numberOfTuples; i++) {
-            list.add((long) (Math.random() * 10000000));
+            list[i] = (long) i;
         }
 
-        ArrayList<ArrayList<Long>> buckets = new ArrayList<>();
-
-        for (int i = 0; i < numberOfThreads; i++) {
-            buckets.add(new ArrayList<>());
-        }
-
-        for (int i = 0; i < numberOfThreads; i++) {
-            for (int j = i; j < (i+1) * (numberOfTuples / numberOfThreads); j++) {
-                buckets.get(i).add(list.get(j));
-            }
-        }
-
-        Thread[] threads = new Thread[numberOfThreads];
-        for (int i = 0; i < numberOfThreads; i++) {
-            threads[i] = new WorkerThread(buckets.get(i), hashBits);       
-        };
-
-        long startTime = System.currentTimeMillis();
+        Long[][] bucket = new Long[numberOfThreads][(int) numberOfTuples / numberOfThreads];
         
-        //start threads
+        int blockSize = (int) numberOfTuples / numberOfThreads;
+        
         for (int i = 0; i < numberOfThreads; i++) {
-            threads[i].start();
-        }
-        //wait for threads to finish
-        for (int i = 0; i < numberOfThreads; i++) {
-            try {
-                threads[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (int j = i * blockSize; j < (i+1) * blockSize; j++) {
+                bucket[i][j - i * blockSize] = list[j];
             }
         }
-        //stop timer
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < numberOfThreads; i++) {
+            final int index = i;
+
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Long[][] partitions = new Long[hashBits][(bucket[index].length / hashBits)];
+                    for (int j = 0; j < bucket[index].length; j++) {
+                        partitions[bucket[index][j].intValue() % hashBits][j] = bucket[index][j];
+                    }
+                }
+            });
+        }
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(10, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         long endTime = System.currentTimeMillis();
-        results.add((int) (numberOfTuples));
-        //return time
-        return endTime - startTime;
+        System.out.println("Time: " + (endTime - startTime));
+        return 0;   
     }
+
+    //     Thread[] threads = new Thread[numberOfThreads];
+    //     for (int i = 0; i < numberOfThreads; i++) {
+    //         threads[i] = new WorkerThread(buckets.get(i), hashBits);       
+    //     };
+
+    //     long startTime = System.currentTimeMillis();
+        
+    //     //start threads
+    //     for (int i = 0; i < numberOfThreads; i++) {
+    //         threads[i].start();
+    //     }
+    //     //wait for threads to finish
+    //     for (int i = 0; i < numberOfThreads; i++) {
+    //         try {
+    //             threads[i].join();
+    //         } catch (InterruptedException e) {
+    //             e.printStackTrace();
+    //         }
+    //     }
+    //     //stop timer
+    //     long endTime = System.currentTimeMillis();
+    //     results.add((int) (numberOfTuples));
+    //     //return time
+    //     return endTime - startTime;
+    // }
 
 }

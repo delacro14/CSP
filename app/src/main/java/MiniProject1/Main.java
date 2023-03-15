@@ -35,7 +35,7 @@ public class Main {
     public static void main(String[] args) {
         // Create data
         //DataGenerator data = new DataGenerator(650);
-        int[] threads = {1, 2, 4, 8, 16, 32};
+        int[] threads = {1, 4, 32};
         int[] hashbits = {1, 2, 4, 8, 16};
         int numberOfRuns = 10;
         ArrayList<Triple> tupleListIndependentPartition = new ArrayList<>();
@@ -43,42 +43,51 @@ public class Main {
         IndependentPartition ip = new IndependentPartition();
         ConcurrentPartition cp = new ConcurrentPartition();
         
-        for (int i = 0; i < threads.length; i++) {
-            for (int j = 0; j < hashbits.length; j++) {
-                ArrayList<Long> results = new ArrayList<>();
-                ArrayList<Integer> results2 = new ArrayList<>();
-                for (int k = 0; k < numberOfRuns; k++) {
-                    results.add(ip.partition(threads[i], (int) (Math.pow(2, hashbits[j])), results2));
-                }
-                //calculate the average
-                long average = 0;
-                long averageData = 0;
-                for (int k = 0; k < results.size(); k++) {
-                    average += results.get(k);
-                    averageData += results2.get(k);
-                }
-                Triple tripl = new Triple(threads[i], hashbits[j], average, averageData);
-                tupleListIndependentPartition.add(tripl);
-            }
-        }
-        for (int i = 0; i < threads.length; i++) {
-            for (int j = 0; j < hashbits.length; j++) {
-                ArrayList<Long> results = new ArrayList<>();
-                ArrayList<Integer> results2 = new ArrayList<>();
-                for (int k = 0; k < numberOfRuns; k++) {
-                    results.add(cp.partition(threads[i], (int) (Math.pow(2, hashbits[j])), results2));
-                }
-                //calculate the average
-                long average = 0;
-                long averageData = 0;
-                for (int k = 0; k < results.size(); k++) {
-                    average += results.get(k);
-                    averageData += results2.get(k);
-                }
-                Triple tripl = new Triple(threads[i], hashbits[j], average, averageData);
-                tupleListConcurrentPartition.add(tripl);
-            }
-        }
+        // for (int i = 0; i < threads.length; i++) {
+        //     for (int j = 0; j < hashbits.length; j++) {
+        //         for (int k = 0; k < numberOfRuns; k++) {
+        //             ip.partition(threads[i], (int) (Math.pow(2, hashbits[j])));
+        //         }
+        //     }
+        // }
+
+        ip.partition(4, (int) (Math.pow(2, 4)));
+        // for (int i = 0; i < threads.length; i++) {
+        //     for (int j = 0; j < hashbits.length; j++) {
+        //         ArrayList<Long> results = new ArrayList<>();
+        //         ArrayList<Integer> results2 = new ArrayList<>();
+        //         for (int k = 0; k < numberOfRuns; k++) {
+        //             results.add(ip.partition(threads[i], (int) (Math.pow(2, hashbits[j])), results2));
+        //         }
+        //         //calculate the average
+        //         long average = 0;
+        //         long averageData = 0;
+        //         for (int k = 0; k < results.size(); k++) {
+        //             average += results.get(k);
+        //             //averageData += results2.get(k);
+        //         }
+        //         Triple tripl = new Triple(threads[i], hashbits[j], average, averageData);
+        //         tupleListIndependentPartition.add(tripl);
+        //     }
+        // }
+        // for (int i = 0; i < threads.length; i++) {
+        //     for (int j = 0; j < hashbits.length; j++) {
+        //         ArrayList<Long> results = new ArrayList<>();
+        //         ArrayList<Integer> results2 = new ArrayList<>();
+        //         for (int k = 0; k < numberOfRuns; k++) {
+        //             results.add(cp.partition(threads[i], (int) (Math.pow(2, hashbits[j])), results2));
+        //         }
+        //         //calculate the average
+        //         long average = 0;
+        //         long averageData = 0;
+        //         for (int k = 0; k < results.size(); k++) {
+        //             average += results.get(k);
+        //             averageData += results2.get(k);
+        //         }
+        //         Triple tripl = new Triple(threads[i], hashbits[j], average, averageData);
+        //         tupleListConcurrentPartition.add(tripl);
+        //     }
+        // }
 
 
         //write to output

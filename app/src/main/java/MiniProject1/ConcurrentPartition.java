@@ -1,103 +1,91 @@
 package MiniProject1;
 
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.lang.Math;
+import java.util.concurrent.Callable;
 
 public class ConcurrentPartition {
-    private static class WorkerThread extends Thread {
-        private int hashBits;
-        private ArrayList<Long> bucket;
-        ArrayList<ArrayList<Long>> buffer;
-        ReentrantLock[] locks;
-
-        public WorkerThread(
-                ArrayList<Long> bucket,
-                int hashBits,
-                ArrayList<ArrayList<Long>> buffer,
-                ReentrantLock[] locks) {
-            this.bucket = bucket;
-            this.hashBits = hashBits;
-            this.buffer = buffer;
-            this.locks = locks;
-        }
-
-        public void run() {
-            //partition the bucket
-            for (int i = 0; i < bucket.size(); i++) {
-                Long value = bucket.get(i);
-                int partition = (int) (value % hashBits);
-                locks[partition].lock();
-                buffer.get(partition).add(value);
-                locks[partition].unlock();
-            }
-        }
-    }
-
-    public long partition(int numberOfThreads, int hashBits, ArrayList<Integer> results) {
+    // public static class PartitionJob implements Callable<Void> {
+    //     Long[][] partitions;
+    //     AtomicIntegerArray[] counters;
+    //     int index;
+    //     Long[][] bucket;
+    //     int hashBits;
+    
+    //     public PartitionJob(Long[][] partitions, AtomicIntegerArray[] counters, int index, Long[][] bucket, int hashBits) {
+    //         this.partitions = partitions;
+    //         this.counters = counters;
+    //         this.index = index;
+    //         this.bucket = bucket;
+    //         this.hashBits = hashBits;
+    //     }
+    
+    //     @Override
+    //     public Void call() throws Exception {
+    //         for (int j = 0; j < bucket[index].length; j++) {
+    //             int partitionIndex = bucket[index][j].intValue() % hashBits;
+    //             int position = counters.getAndIncrement(bucket[index][j].intValue() % hashBits);
+    //             partitions[partitionIndex][position] = bucket[index][j];
+    //         }        
+    //     }
+    // }
+    
+    public long partition(int numberOfThreads, int hashBits) {
         System.out.println("Concurrent Partition" + " " + numberOfThreads + " " + hashBits);
         long numberOfTuples = 3200000;
-
-        ArrayList<Long> list = new ArrayList<>();
-
-        for (int i = 0; i < numberOfTuples; i++) {
-            list.add((long) (Math.random() * 10000000));
-        }
-
-        ArrayList<ArrayList<Long>> buckets = new ArrayList<>();
-
-        for (int i = 0; i < numberOfThreads; i++) {
-            buckets.add(new ArrayList<>());
-        }
-
-        for (int i = 0; i < numberOfThreads; i++) {
-            for (int j = i; j < (i+1) * (numberOfTuples / numberOfThreads); j++) {
-                buckets.get(i).add(list.get(j));
-            }
-        }
-
-        ArrayList<ArrayList<Long>> buffer = new ArrayList<>();
-        for (int i = 0; i < hashBits; i++) {
-            buffer.add(new ArrayList<>());
-        }
+        
         ReentrantLock[] locks = new ReentrantLock[hashBits];
 
-        for (int i = 0; i < hashBits; i++) {
-            locks[i] = new ReentrantLock();
+        // for (int i = 0; i < hashBits; i++) {
+        //     locks[i] = new ReentrantLock();
+        // }
+        Long[] list = new Long[(int) numberOfTuples];
+
+        for (int i = 0; i < numberOfTuples; i++) {
+            list[i] = (long) i;
         }
 
-        //start timer
-
-        Thread[] threads = new Thread[numberOfThreads];
-        //give threads work
-        for (int i = 0; i < numberOfThreads; i++) {
-            threads[i] = new WorkerThread(
-                buckets.get(i),
-                hashBits,
-                buffer,
-                locks
-            );
-        };
+        Long[][] bucket = new Long[numberOfThreads][(int) numberOfTuples / numberOfThreads];
         
-        long startTime = System.currentTimeMillis();
-
-        //start threads
+        int blockSize = (int) numberOfTuples / numberOfThreads;
+        
         for (int i = 0; i < numberOfThreads; i++) {
-            threads[i].start();
-        }
-        //wait for threads to finish
-        for (int i = 0; i < numberOfThreads; i++) {
-            try {
-                threads[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (int j = i * blockSize; j < (i+1) * blockSize; j++) {
+                bucket[i][j - i * blockSize] = list[j];
             }
         }
-        //stop timer
+        Long[][] partitions = new Long[hashBits][(int) numberOfTuples / hashBits + 1];
+        AtomicIntegerArray counters = new AtomicIntegerArray(hashBits);
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < numberOfThreads; i++) {
+            final int index = i;
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    for (int j = 0; j < bucket[index].length; j++) {
+                        int partitionIndex = bucket[index][j].intValue() % hashBits;
+                        int position = counters.getAndIncrement(partitionIndex);
+                        partitions[partitionIndex][position] = bucket[index][j];
+                    }        
+                }
+            });
+        }
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(10, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         long endTime = System.currentTimeMillis();
-        results.add((int) (numberOfTuples));
-        //return time
-        return endTime - startTime;
+        System.out.println("Time: " + (endTime - startTime));
+        return endTime - startTime;   
+
     }
 
 }

@@ -5,35 +5,12 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.lang.Math;
 
 public class IndependentPartition {
-    private static class WorkerThread extends Thread {
-        private ArrayList<Long> bucket;
-        private int hashBits;
-
-        public WorkerThread(ArrayList<Long> bucket, int hashBits) {
-            this.bucket = bucket;
-            this.hashBits = hashBits;
-        }
-        // Find the maximum value in our particular piece of the array
-        public void run() {
-            //initialize partitions
-            ArrayList<ArrayList<Long>> partitions = new ArrayList<>();
-            for (int i = 0; i < hashBits; i++) {
-                partitions.add(new ArrayList<>());
-            }
-            //partition the bucket
-            for (int i = 0; i < bucket.size(); i++) {
-                partitions.get((int)(bucket.get(i) % hashBits)).add(bucket.get(i));
-            }
-        }
-
-    }
-
-
     public long partition(int numberOfThreads, int hashBits) {
         System.out.println("Independent Partition" + " " + numberOfThreads + " " + hashBits);
-        long numberOfTuples = 16777216;
+        long numberOfTuples = 32000000;
 
         Long[] list = new Long[(int) numberOfTuples];
 
@@ -58,9 +35,15 @@ public class IndependentPartition {
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    Long[][] partitions = new Long[hashBits][(bucket[index].length / hashBits)];
+                    Long[][] partitions = new Long[hashBits][(bucket[index].length / hashBits)+1];
+                    int[] counters = new int[hashBits];
+                    for (int i = 0; i < hashBits; i++) {
+                        counters[i] = 0;
+                    }
                     for (int j = 0; j < bucket[index].length; j++) {
-                        partitions[bucket[index][j].intValue() % hashBits][j] = bucket[index][j];
+                        int partitionIndex = bucket[index][j].intValue() % hashBits;
+                        partitions[partitionIndex][counters[partitionIndex]] = bucket[index][j];
+                        counters[partitionIndex]++;
                     }
                 }
             });
@@ -74,33 +57,6 @@ public class IndependentPartition {
         }
         long endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime));
-        return 0;   
+        return endTime - startTime;   
     }
-
-    //     Thread[] threads = new Thread[numberOfThreads];
-    //     for (int i = 0; i < numberOfThreads; i++) {
-    //         threads[i] = new WorkerThread(buckets.get(i), hashBits);       
-    //     };
-
-    //     long startTime = System.currentTimeMillis();
-        
-    //     //start threads
-    //     for (int i = 0; i < numberOfThreads; i++) {
-    //         threads[i].start();
-    //     }
-    //     //wait for threads to finish
-    //     for (int i = 0; i < numberOfThreads; i++) {
-    //         try {
-    //             threads[i].join();
-    //         } catch (InterruptedException e) {
-    //             e.printStackTrace();
-    //         }
-    //     }
-    //     //stop timer
-    //     long endTime = System.currentTimeMillis();
-    //     results.add((int) (numberOfTuples));
-    //     //return time
-    //     return endTime - startTime;
-    // }
-
 }

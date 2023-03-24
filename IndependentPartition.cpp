@@ -3,12 +3,16 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <ctime>
+#include <ratio>
+#include <chrono>
 
 using namespace std;
 
-void independentPartition(int numberOfThreads, int hashBits) {
+double independentPartition(int numberOfThreads, int hashBits) {
+    using namespace std::chrono;
     cout << "Independent  Partition " << numberOfThreads << " " << hashBits << endl;
-    long numberOfTuples = 3200000;
+    long numberOfTuples = 16777216;
     int blockSize = (int) numberOfTuples / numberOfThreads;
 
     vector<long> list(numberOfTuples); //list of tuples
@@ -29,6 +33,7 @@ void independentPartition(int numberOfThreads, int hashBits) {
     }
 
     //cout << "Buckets created " << endl;
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     for (int i = 0; i < numberOfThreads; i++) {
         threads[i] = thread([&, i](){
@@ -49,5 +54,9 @@ void independentPartition(int numberOfThreads, int hashBits) {
     for (int i = 0; i < numberOfThreads; i++) {
         threads[i].join();
     }
-    return;
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
+    cout << to_string(time_span.count()) << endl;
+
+    return time_span.count();
 }

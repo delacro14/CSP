@@ -9,6 +9,21 @@
 
 using namespace std;
 
+void concurrentFunc(
+        int from,
+        int to,
+        vector<long> &list,
+        vector<vector<long>> &partitions,
+        int hashBits,
+        vector<mutex>  &locks
+        ){
+    for (int j = from; j < to; j++) {
+        int partitionIndex = list[j] % hashBits;
+        locks[partitionIndex].lock();
+        partitions[partitionIndex].push_back(list[j]);
+        locks[partitionIndex].unlock();
+    }
+}
 
 double concurrentPartition(int numberOfThreads, int hashBits) {
     using namespace std::chrono;
@@ -17,34 +32,22 @@ double concurrentPartition(int numberOfThreads, int hashBits) {
     int blockSize = numberOfTuples / numberOfThreads;
 
     vector<long> list(numberOfTuples);;
-    vector<vector<long>> bucket(numberOfThreads, vector<long>(numberOfTuples / numberOfThreads));
-    vector<vector<long>> partitions(hashBits, vector<long>(numberOfTuples / hashBits + 1));
+    vector<vector<long>> partitions(hashBits);
     vector<mutex> locks(hashBits);
-    vector<atomic<int>> counters(hashBits);
     vector<thread> threads(numberOfThreads);
-    //cout << "initialization completed" << endl;
     for (int i = 0; i < numberOfTuples; i++) {
         list[i] = i+1;
     }
-    //cout << "list created " << endl;
-    for (int i = 0; i < numberOfThreads; i++) {
-        for (int j = i * blockSize; j < (i+1) * blockSize; j++) {
-            bucket[i][j - i * blockSize] = list[j];
-        }
-    }
 
-    //cout << "Buckets created " << endl;
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     for (int i = 0; i < numberOfThreads; i++) {
-        threads[i] = thread([&, i](){
-            //cout << "Thread " << i << " started" << endl;
-            for (int j = 0; j < bucket[i].size(); j++) {
-                int partitionIndex = bucket[i][j] % hashBits;
-                int position = counters[partitionIndex]++;
-                partitions[partitionIndex][position] = bucket[i][j];
-            }
-        });
+        int from = i * blockSize;
+        int to = from + blockSize;
+        if (i + 1 == numberOfThreads) {
+            to = numberOfTuples;  // work the rest
+        }
+        threads[i] = thread(concurrentFunc, from, to, ref(list), ref(partitions), hashBits, ref(locks));
     }
 
     for (int i = 0; i < numberOfThreads; i++) {

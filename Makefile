@@ -1,6 +1,6 @@
 # Compiler options
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++11
+CFLAGS = -Wall -Wextra -std=c++11 -g
 
 # Linker options
 LDFLAGS = -pthread

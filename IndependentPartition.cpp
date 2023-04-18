@@ -12,13 +12,24 @@ using namespace std;
 void independentFunc(
         int from,
         int to,
-        vector<long> &list
+        int hashBits,
+        vector<long> &list,
+        vector<vector<long>*> &partitions
 ) {
-    vector<long> partitions;
+//    partitions.resize(hashBits, nullptr);
+//    cout << "hashBits: " << hashBits << endl;
+//    cout << "partitions size: " << partitions.size() << endl;
+//    cout << "(to - from)/hashBits: " << (to - from)/hashBits << endl;
+//    vector<vector<long>*> partitions(hashBits, nullptr);
+    for (int j = 0; j < hashBits; j++) {
+        partitions[j] = new vector<long>();
+        partitions[j]->reserve((to - from)/hashBits);
+    }
 
     //partition the bucket
     for (int j = from; j < to; j++) {
-        partitions.push_back(list[j]);
+        int partitionIndex = list[j] % hashBits;
+        partitions[partitionIndex]->push_back(list[j]);
     }
 }
 
@@ -30,6 +41,7 @@ double independentPartition(int numberOfThreads, int hashBits) {
 
     vector<long> list(numberOfTuples); //list of tuples
     vector<thread> threads(numberOfThreads);
+    vector<vector<vector<long>*>>finalOutput;
 
     //cout << "initialization completed" << endl;
 
@@ -38,6 +50,7 @@ double independentPartition(int numberOfThreads, int hashBits) {
     }
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    finalOutput = vector<vector<vector<long>*>>(numberOfThreads, vector<vector<long>*>(hashBits, nullptr));
 
     for (int i = 0; i < numberOfThreads; i++) {
         int from = i * blockSize;
@@ -45,7 +58,7 @@ double independentPartition(int numberOfThreads, int hashBits) {
         if (i + 1 == numberOfThreads) {
             to = numberOfTuples;  // work the rest
         }
-        threads[i] = thread(independentFunc, from, to, ref(list));
+        threads[i] = thread(independentFunc, from, to, hashBits, ref(list), ref(finalOutput[i]));
     }
 
     for (int i = 0; i < numberOfThreads; i++) {
@@ -54,6 +67,10 @@ double independentPartition(int numberOfThreads, int hashBits) {
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     duration<double> time_span = duration_cast<duration<double>>(t2 - t1);
     cout << to_string(time_span.count()) << endl;
-
+    for (int i = 0; i < numberOfThreads; i++) {
+        for (int j = 0; j < hashBits; j++) {
+            delete finalOutput[i][j];
+        }
+    }
     return time_span.count();
 }

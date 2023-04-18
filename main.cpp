@@ -26,7 +26,7 @@ int main() {
             }
             std::ofstream outfile;
             outfile.open("independentPartition.csv", std::ios_base::app); // append instead of overwrite
-            outfile << to_string(threads[i]) + "," + to_string(hashBits[j]) + "," + to_string(numberOfMilis) + "," + to_string(16777216) << endl; 
+            outfile << to_string(threads[i]) + "," + to_string(hashBits[j]) + "," + to_string(numberOfMilis) + "," + to_string(16777216) << endl;
             outfile.close();
 
             //run independentPartition
@@ -43,7 +43,7 @@ int main() {
             }
             std::ofstream outfile;
             outfile.open("concurrentPartition.csv", std::ios_base::app); // append instead of overwrite
-            outfile << to_string(threads[i]) + "," + to_string(hashBits[j]) + "," + to_string(numberOfMilis) + "," + to_string(16777216) << endl; 
+            outfile << to_string(threads[i]) + "," + to_string(hashBits[j]) + "," + to_string(numberOfMilis) + "," + to_string(16777216) << endl;
             outfile.close();
 
             //run independentPartition

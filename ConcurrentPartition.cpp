@@ -32,7 +32,6 @@ double concurrentPartition(int numberOfThreads, int hashBits) {
     int blockSize = numberOfTuples / numberOfThreads;
 
     vector<long> list(numberOfTuples);;
-    vector<vector<long>> partitions(hashBits);
     vector<mutex> locks(hashBits);
     vector<thread> threads(numberOfThreads);
     for (int i = 0; i < numberOfTuples; i++) {
@@ -40,6 +39,7 @@ double concurrentPartition(int numberOfThreads, int hashBits) {
     }
 
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    vector<vector<long>> partitions(hashBits);
 
     for (int i = 0; i < numberOfThreads; i++) {
         int from = i * blockSize;

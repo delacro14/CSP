@@ -1,0 +1,6 @@
+#ifndef CSP_IN_C_INDEPENDENTPARTITION_H
+#define CSP_IN_C_INDEPENDENTPARTITION_H
+
+double independentPartition(int, int);
+
+#endif //CSP_IN_C_INDEPENDENTPARTITION_H

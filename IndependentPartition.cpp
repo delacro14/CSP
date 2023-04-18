@@ -16,11 +16,6 @@ void independentFunc(
         vector<long> &list,
         vector<vector<long>*> &partitions
 ) {
-//    partitions.resize(hashBits, nullptr);
-//    cout << "hashBits: " << hashBits << endl;
-//    cout << "partitions size: " << partitions.size() << endl;
-//    cout << "(to - from)/hashBits: " << (to - from)/hashBits << endl;
-//    vector<vector<long>*> partitions(hashBits, nullptr);
     for (int j = 0; j < hashBits; j++) {
         partitions[j] = new vector<long>();
         partitions[j]->reserve((to - from)/hashBits);
@@ -42,8 +37,6 @@ double independentPartition(int numberOfThreads, int hashBits) {
     vector<long> list(numberOfTuples); //list of tuples
     vector<thread> threads(numberOfThreads);
     vector<vector<vector<long>*>>finalOutput;
-
-    //cout << "initialization completed" << endl;
 
     for (int i = 0; i < numberOfTuples; i++) {
         list[i] = i+1;
